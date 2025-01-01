@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -42,4 +43,6 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation("androidx.room:room-runtime:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    annotationProcessor("com.google.dagger:hilt-android-compiler:2.51.1")
 }
