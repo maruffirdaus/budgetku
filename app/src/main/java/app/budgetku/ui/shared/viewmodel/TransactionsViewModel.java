@@ -54,6 +54,8 @@ public class TransactionsViewModel extends ViewModel {
     private final EditWith2ParamsUseCase<Transaction, List<Integer>> editTransaction;
     private final DeleteUseCase<Transaction> deleteTransaction;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final MutableLiveData<Integer> _walletUpdateRequired = new MutableLiveData<>();
+    public LiveData<Integer> walletUpdateRequired = _walletUpdateRequired;
 
     @Inject
     public TransactionsViewModel(GetBy1ParamUseCase<Integer,
