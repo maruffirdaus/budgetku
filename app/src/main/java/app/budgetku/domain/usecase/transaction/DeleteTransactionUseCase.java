@@ -17,6 +17,7 @@ public class DeleteTransactionUseCase extends DeleteUseCase<Transaction> {
     }
 
     @Override
+    @androidx.room.Transaction
     public void execute(Transaction data) {
         Wallet currentWallet = walletsRepository.getWallet(data.getWalletId());
         if (data.getIsIncome()) {
@@ -24,7 +25,7 @@ public class DeleteTransactionUseCase extends DeleteUseCase<Transaction> {
         } else {
             currentWallet.setBalance(currentWallet.getBalance() + data.getAmount());
         }
-        walletsRepository.editWallet(currentWallet);
         transactionsRepository.deleteTransaction(data);
+        walletsRepository.editWallet(currentWallet);
     }
 }
