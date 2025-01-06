@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -13,6 +15,12 @@ import app.budgetku.domain.usecase.base.AddUseCase;
 import app.budgetku.domain.usecase.base.DeleteUseCase;
 import app.budgetku.domain.usecase.base.EditUseCase;
 import app.budgetku.domain.usecase.base.GetUseCase;
+import app.budgetku.domain.usecase.category.DeleteCategoryUseCase;
+import app.budgetku.domain.usecase.category.EditCategoryUseCase;
+import app.budgetku.domain.usecase.category.GetCategoriesUseCase;
+import app.budgetku.domain.usecase.wallet.DeleteWalletUseCase;
+import app.budgetku.domain.usecase.wallet.EditWalletUseCase;
+import app.budgetku.domain.usecase.wallet.GetWalletsUseCase;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
 @HiltViewModel
@@ -28,10 +36,16 @@ public class WalletsViewModel extends ViewModel {
     private EditUseCase<Wallet> editWallet;
     private DeleteUseCase<Wallet> deleteWallet;
 
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
     @Inject
-    public WalletsViewModel(AddUseCase<Wallet> addWallet) {
+    public WalletsViewModel(GetUseCase<List<Wallet>> getWallets,AddUseCase<Wallet> addWallet,
+                            EditUseCase<Wallet> editWallet, DeleteUseCase<Wallet> deleteWallet) {
+        this.getWallets = getWallets;
         this.addWallet = addWallet;
-        _wallets.setValue(List.of(new Wallet(0, "Paypal", "$", 5000)));
+        this.editWallet = editWallet;
+        this.deleteWallet = deleteWallet;
+
         getWallets();
     }
 
@@ -47,7 +61,10 @@ public class WalletsViewModel extends ViewModel {
     }
 
     public void getWallets() {
-
+        executorService.execute(()->{
+            GetWalletsUseCase get = (GetWalletsUseCase) getWallets;
+            _wallets.postValue(get.execute());
+        });
     }
 
     public void addWallet(Wallet wallet) {
@@ -56,12 +73,35 @@ public class WalletsViewModel extends ViewModel {
             getWallets();
         } catch (Exception e) {
             setWalletRelatedMessage(e.getMessage());
+        } finally {
+            getWallets();
         }
     }
 
     public void editWallet(Wallet wallet) {
+        executorService.execute(()->{
+            EditWalletUseCase edit = (EditWalletUseCase) editWallet;
+            try {
+                edit.execute(wallet);
+            } catch (Exception e) {
+                _walletRelatedMessage.postValue(e.getMessage());
+            } finally {
+                getWallets();
+            }
+        });
     }
 
     public void deleteWallet(Wallet wallet) {
+        executorService.execute(()->{
+            DeleteWalletUseCase delete = (DeleteWalletUseCase) deleteWallet;
+            delete.execute(wallet);
+            getWallets();
+        });
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        executorService.shutdown();
     }
 }

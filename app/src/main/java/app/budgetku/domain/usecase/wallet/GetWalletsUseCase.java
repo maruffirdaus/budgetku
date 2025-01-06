@@ -15,7 +15,7 @@ public class GetWalletsUseCase extends GetUseCase<List<Wallet>> {
     }
 
     @Override
-    public List<Wallet> execute() throws Exception {
+    public List<Wallet> execute() {
         return repository.getWallets();
     }
 }
