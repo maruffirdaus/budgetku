@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements FragmentListener 
 
         transactionsViewModel.walletUpdateRequired.observe(this, walletId -> {
             if (walletId != null) {
-                walletsViewModel.getWallet(walletId);
+                walletsViewModel.setSelectedWallet(walletId);
             }
         });
     }
