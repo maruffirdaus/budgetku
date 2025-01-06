@@ -75,7 +75,7 @@
                         android:layout_marginBottom="16dp"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="@string/balance"
+                        android:text="@string/balance_empty"
                         android:textAppearance="@style/TextAppearance.Material3.DisplaySmall"
                         android:textColor="?attr/colorOnPrimaryFixed" />
 
