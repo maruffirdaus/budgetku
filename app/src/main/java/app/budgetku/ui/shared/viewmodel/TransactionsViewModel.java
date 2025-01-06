@@ -20,6 +20,13 @@ import app.budgetku.domain.usecase.base.EditWith2ParamsUseCase;
 import app.budgetku.domain.usecase.base.GetBy1ParamsUseCase;
 import app.budgetku.domain.usecase.base.GetBy2ParamsUseCase;
 import app.budgetku.domain.usecase.base.GetBy3ParamsUseCase;
+import app.budgetku.domain.usecase.category.AddCategoryUseCase;
+import app.budgetku.domain.usecase.category.DeleteCategoryUseCase;
+import app.budgetku.domain.usecase.category.EditCategoryUseCase;
+import app.budgetku.domain.usecase.category.GetCategoriesUseCase;
+import app.budgetku.domain.usecase.transaction.AddTransactionUseCase;
+import app.budgetku.domain.usecase.transaction.DeleteTransactionUseCase;
+import app.budgetku.domain.usecase.transaction.EditTransactionUseCase;
 import app.budgetku.domain.usecase.transaction.GetTransactionWithCategoriesUseCase;
 import app.budgetku.domain.usecase.transaction.GetTransactionsByWalletCategoryDateUseCase;
 import app.budgetku.domain.usecase.transaction.GetTransactionsByWalletDateUseCase;
@@ -132,13 +139,37 @@ public class TransactionsViewModel extends ViewModel {
     }
 
     public void addTransaction(Transaction transaction, List<Integer> selectedCategoryIds) {
-
+        executorService.execute(()->{
+            AddTransactionUseCase add = (AddTransactionUseCase) addTransaction;
+            try {
+                add.execute(transaction,selectedCategoryIds);
+            } catch (Exception e) {
+                _transactionRelatedMessage.postValue(e.getMessage());
+            } finally {
+                getTransactions();
+            }
+        });
     }
 
     public void editTransaction(Transaction transaction, List<Integer> selectedCategoryIds) {
+        executorService.execute(()->{
+            EditTransactionUseCase edit = (EditTransactionUseCase) editTransaction;
+            try {
+                edit.execute(transaction,selectedCategoryIds);
+            } catch (Exception e) {
+                _transactionRelatedMessage.postValue(e.getMessage());
+            } finally {
+                getTransactions();
+            }
+        });
     }
 
     public void deleteTransaction(Transaction transaction) {
+        executorService.execute(()->{
+            DeleteTransactionUseCase delete = (DeleteTransactionUseCase) deleteTransaction;
+            delete.execute(transaction);
+            getTransactions();
+        });
     }
 
     @Override
