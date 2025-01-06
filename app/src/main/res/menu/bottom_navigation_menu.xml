@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_dashboard"
+        android:title="@string/dashboard"
+        android:icon="@drawable/ic_space_dashboard" />
+    <item
+        android:id="@+id/menu_add_item"
+        android:title="@string/add_transaction"
+        android:icon="@drawable/ic_add_circle" />
+    <item
+        android:id="@+id/menu_transactions"
+        android:title="@string/transactions"
+        android:icon="@drawable/ic_receipt_long" />
+</menu>

@@ -2,65 +2,128 @@ package app.budgetku.ui.transactions;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.tabs.TabLayoutMediator;
+
+import java.text.NumberFormat;
+import java.util.Objects;
 
 import app.budgetku.R;
+import app.budgetku.databinding.FragmentTransactionsBinding;
+import app.budgetku.ui.shared.listener.FragmentListener;
+import app.budgetku.ui.shared.viewmodel.CategoriesViewModel;
+import app.budgetku.ui.shared.viewmodel.TransactionsViewModel;
+import app.budgetku.ui.shared.viewmodel.WalletsViewModel;
+import app.budgetku.ui.shared.widget.YearPickerDialog;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link TransactionsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class TransactionsFragment extends Fragment {
+    private FragmentTransactionsBinding binding;
+    private WalletsViewModel walletsViewModel;
+    private CategoriesViewModel categoriesViewModel;
+    private TransactionsViewModel transactionsViewModel;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public TransactionsFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment TransactionsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static TransactionsFragment newInstance(String param1, String param2) {
-        TransactionsFragment fragment = new TransactionsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        binding = FragmentTransactionsBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setupViewModel();
+        setupTopAppBar();
+        setupViewPager();
+        setupSnackbar();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        resetViewModelMessages();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+
+    private void setupViewModel() {
+        walletsViewModel = new ViewModelProvider(requireActivity()).get(WalletsViewModel.class);
+        categoriesViewModel = new ViewModelProvider(requireActivity()).get(CategoriesViewModel.class);
+        transactionsViewModel = new ViewModelProvider(requireActivity()).get(TransactionsViewModel.class);
+        transactionsViewModel.setFilteredTransactionsEnabled(true);
+    }
+
+    private void setupTopAppBar() {
+        binding.topAppBar.setNavigationOnClickListener(v -> ((FragmentListener) requireActivity()).onToolbarNavigationClick());
+        walletsViewModel.selectedWallet.observe(getViewLifecycleOwner(), selectedWallet -> {
+            binding.topAppBar.setTitle(selectedWallet.getName());
+            NumberFormat numberFormat = NumberFormat.getNumberInstance();
+            String formattedBalance = numberFormat.format(selectedWallet.getBalance());
+            binding.topAppBar
+                    .setSubtitle(new StringBuilder().append(selectedWallet.getCurrency()).append(formattedBalance));
+        });
+        Button btnYearFilter = Objects
+                .requireNonNull(binding.topAppBar.getMenu().getItem(0).getActionView())
+                .findViewById(R.id.btn_year_filter);
+        transactionsViewModel.selectedYear.observe(getViewLifecycleOwner(), selectedYear -> {
+            btnYearFilter.setText(String.valueOf(selectedYear));
+            transactionsViewModel.getTransactions();
+        });
+        btnYearFilter.setOnClickListener(v -> {
+            if (transactionsViewModel.selectedYear.getValue() != null) {
+                new YearPickerDialog(requireActivity(), transactionsViewModel.selectedYear.getValue(),
+                        selectedYear -> transactionsViewModel.setSelectedYear(selectedYear),
+                        actualYear -> transactionsViewModel.setSelectedYear(actualYear)).show();
+            }
+        });
+    }
+
+    private void setupViewPager() {
+        TransactionsSectionAdapter adapter = new TransactionsSectionAdapter(requireActivity());
+        String[] monthFilters = getResources().getStringArray(R.array.month_filters);
+        binding.viewPager.setAdapter(adapter);
+        new TabLayoutMediator(binding.tabLayout, binding.viewPager,
+                (tab, position) -> tab.setText(monthFilters[position])).attach();
+        if (transactionsViewModel.selectedMonth.getValue() != null) {
+            binding.viewPager.setCurrentItem(transactionsViewModel.selectedMonth.getValue(), false);
         }
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_transactions, container, false);
+    private void setupSnackbar() {
+        walletsViewModel.walletRelatedMessage.observe(getViewLifecycleOwner(), message -> {
+            if (message != null) {
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_SHORT).show();
+            }
+        });
+        categoriesViewModel.categoryRelatedMessage.observe(getViewLifecycleOwner(), message -> {
+            if (message != null) {
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_SHORT).show();
+            }
+        });
+        transactionsViewModel.transactionRelatedMessage.observe(getViewLifecycleOwner(), message -> {
+            if (message != null) {
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void resetViewModelMessages() {
+        walletsViewModel.setWalletRelatedMessage(null);
+        categoriesViewModel.setCategoryRelatedMessage(null);
+        transactionsViewModel.setTransactionRelatedMessage(null);
     }
 }

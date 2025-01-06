@@ -1,8 +1,25 @@
 package app.budgetku.data.database.entity;
 
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 
-@Entity(primaryKeys = {"transactionId", "categoryId"})
+@Entity(
+        primaryKeys = {"transactionId", "categoryId"},
+        foreignKeys = {
+                @ForeignKey(
+                        entity = Transaction.class,
+                        parentColumns = "id",
+                        childColumns = "transactionId",
+                        onDelete = ForeignKey.CASCADE
+                ),
+                @ForeignKey(
+                        entity = Category.class,
+                        parentColumns = "id",
+                        childColumns = "categoryId",
+                        onDelete = ForeignKey.CASCADE
+                )
+        }
+)
 public class TransactionCategoryCrossRef {
     private int transactionId;
     private int categoryId;

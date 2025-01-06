@@ -1,0 +1,25 @@
+package app.budgetku.ui.shared.widget;
+
+import android.content.Context;
+
+import androidx.annotation.NonNull;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import app.budgetku.R;
+
+public class DeleteCategoryDialog extends MaterialAlertDialogBuilder {
+
+    public DeleteCategoryDialog(@NonNull Context context, Runnable onOKButtonClick) {
+        super(context);
+        setupDialog(onOKButtonClick);
+    }
+
+    private void setupDialog(Runnable onOKButtonClick) {
+        super
+                .setTitle(R.string.delete_category)
+                .setMessage(R.string.delete_category_message)
+                .setPositiveButton(R.string.ok, ((dialog, which) -> onOKButtonClick.run()))
+                .setNegativeButton(R.string.cancel, ((dialog, which) -> dialog.dismiss()));
+    }
+}

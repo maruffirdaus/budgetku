@@ -27,8 +27,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        viewBinding = true
     }
 }
 
@@ -45,4 +48,5 @@ dependencies {
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     implementation("com.google.dagger:hilt-android:2.51.1")
     annotationProcessor("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
 }

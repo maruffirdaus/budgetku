@@ -8,11 +8,13 @@ public class Wallet {
     @PrimaryKey(autoGenerate = true)
     private int id;
     private String name;
+    private String currency;
     private int balance;
 
-    public Wallet(int id, String name, int balance) {
+    public Wallet(int id, String name, String currency, int balance) {
         this.id = id;
         this.name = name;
+        this.currency = currency;
         this.balance = balance;
     }
 
@@ -30,6 +32,14 @@ public class Wallet {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getCurrency() {
+        return this.currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public int getBalance() {

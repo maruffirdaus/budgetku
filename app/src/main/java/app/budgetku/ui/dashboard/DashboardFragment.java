@@ -2,65 +2,131 @@ package app.budgetku.ui.dashboard;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import app.budgetku.R;
+import com.google.android.material.snackbar.Snackbar;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link DashboardFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.text.NumberFormat;
+
+import app.budgetku.databinding.FragmentDashboardBinding;
+import app.budgetku.ui.shared.listener.FragmentListener;
+import app.budgetku.ui.shared.viewmodel.CategoriesViewModel;
+import app.budgetku.ui.shared.viewmodel.TransactionsViewModel;
+import app.budgetku.ui.shared.viewmodel.WalletsViewModel;
+import app.budgetku.ui.shared.widget.AddEditWalletDialog;
+import app.budgetku.ui.shared.widget.DeleteWalletDialog;
+import app.budgetku.ui.shared.widget.YearPickerDialog;
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class DashboardFragment extends Fragment {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public DashboardFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment DashboardFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static DashboardFragment newInstance(String param1, String param2) {
-        DashboardFragment fragment = new DashboardFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private FragmentDashboardBinding binding;
+    private WalletsViewModel walletsViewModel;
+    private CategoriesViewModel categoriesViewModel;
+    private TransactionsViewModel transactionsViewModel;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_dashboard, container, false);
+        binding = FragmentDashboardBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setupViewModel();
+        setupTopAppBar();
+        setupWalletCard();
+        setupYearFilterButton();
+        setupSnackbar();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        resetViewModelMessages();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+
+    private void setupViewModel() {
+        walletsViewModel = new ViewModelProvider(requireActivity()).get(WalletsViewModel.class);
+        categoriesViewModel = new ViewModelProvider(requireActivity()).get(CategoriesViewModel.class);
+        transactionsViewModel = new ViewModelProvider(requireActivity()).get(TransactionsViewModel.class);
+        transactionsViewModel.setFilteredTransactionsEnabled(false);
+    }
+
+    private void setupTopAppBar() {
+        binding.topAppBar.setNavigationOnClickListener(v -> ((FragmentListener) requireActivity()).onToolbarNavigationClick());
+    }
+
+    private void setupWalletCard() {
+        walletsViewModel.selectedWallet.observe(getViewLifecycleOwner(), selectedWallet -> {
+            binding.tvWalletName.setText(selectedWallet.getName());
+            NumberFormat numberFormat = NumberFormat.getNumberInstance();
+            String formattedBalance = numberFormat.format(selectedWallet.getBalance());
+            binding.tvWalletBalance
+                    .setText(new StringBuilder().append(selectedWallet.getCurrency()).append(formattedBalance));
+        });
+        binding.cardWallet.setOnClickListener(v -> {
+            if (walletsViewModel.selectedWallet.getValue() != null) {
+                new AddEditWalletDialog(requireActivity(),
+                        walletsViewModel.selectedWallet.getValue(),
+                        editedWallet -> walletsViewModel.editWallet(editedWallet),
+                        walletToDelete -> new DeleteWalletDialog(requireActivity(),
+                                () -> walletsViewModel.deleteWallet(walletToDelete)).show()).show();
+            }
+        });
+    }
+
+    private void setupYearFilterButton() {
+        transactionsViewModel.selectedYear.observe(getViewLifecycleOwner(), selectedYear -> {
+            transactionsViewModel.getTransactions();
+            binding.btnYearFilter.setText(String.valueOf(selectedYear));
+        });
+        binding.btnYearFilter.setOnClickListener(v -> {
+            if (transactionsViewModel.selectedYear.getValue() != null) {
+                new YearPickerDialog(requireActivity(),
+                        transactionsViewModel.selectedYear.getValue(),
+                        selectedYear -> transactionsViewModel.setSelectedYear(selectedYear),
+                        actualYear -> transactionsViewModel.setSelectedYear(actualYear)).show();
+            }
+        });
+    }
+
+    private void setupSnackbar() {
+        walletsViewModel.walletRelatedMessage.observe(getViewLifecycleOwner(), message -> {
+            if (message != null) {
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_SHORT).show();
+            }
+        });
+        categoriesViewModel.categoryRelatedMessage.observe(getViewLifecycleOwner(), message -> {
+            if (message != null) {
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_SHORT).show();
+            }
+        });
+        transactionsViewModel.transactionRelatedMessage.observe(getViewLifecycleOwner(), message -> {
+            if (message != null) {
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void resetViewModelMessages() {
+        walletsViewModel.setWalletRelatedMessage(null);
+        categoriesViewModel.setCategoryRelatedMessage(null);
+        transactionsViewModel.setTransactionRelatedMessage(null);
     }
 }
