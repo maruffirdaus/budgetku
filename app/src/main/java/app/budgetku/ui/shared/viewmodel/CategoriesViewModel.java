@@ -45,6 +45,7 @@ public class CategoriesViewModel extends ViewModel {
         this.addCategory = addCategory;
         this.editCategory = editCategory;
         this.deleteCategory = deleteCategory;
+        getCategories();
     }
 
     public void setSelectedCategoryId(Integer selectedCategoryId) {

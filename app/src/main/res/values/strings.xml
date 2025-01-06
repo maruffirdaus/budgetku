@@ -20,8 +20,8 @@
     <string name="cancel">Cancel</string>
     <string name="reset">Reset</string>
     <string name="add_category">Add category</string>
-    <string name="wallet">Wallet</string>
-    <string name="balance">Balance</string>
+    <string name="wallet">No wallet selected</string>
+    <string name="balance">-</string>
     <string name="year">2024</string>
     <string name="overview">Overview</string>
     <string name="year_filter">Year filter</string>
@@ -49,6 +49,6 @@
     <string name="select_date">Select date</string>
     <string name="title">Title</string>
     <string name="dummy_transaction_title">Installments</string>
-    <string name="dummy_transaction_date">Dec 25, 2023</string>
+    <string name="dummy_transaction_date">26 January 2023</string>
     <string name="dummy_transaction_amount">-Rp500,000</string>
 </resources>

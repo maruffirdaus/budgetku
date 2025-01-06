@@ -9,6 +9,9 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import app.budgetku.R;
 import app.budgetku.data.database.entity.Transaction;
 import app.budgetku.databinding.RvTransactionsBinding;
@@ -54,11 +57,11 @@ public class TransactionsAdapter extends ListAdapter<Transaction, TransactionsAd
                         .setText(new StringBuilder().append("-").append(currency).append(transaction.getAmount()));
                 binding.tvTransactionAmount.setTextColor(expenseColor);
             }
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate date = LocalDate.parse(transaction.getDate(), formatter);
+            formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+            binding.tvTransactionDate.setText(date.format(formatter));
             binding.itemTransaction.setOnClickListener(v -> onItemClickCallback.onItemClick(transaction));
-            binding.itemTransaction.setOnLongClickListener(v -> {
-                onItemClickCallback.onItemLongClick(transaction);
-                return true;
-            });
         }
     }
 
@@ -71,13 +74,15 @@ public class TransactionsAdapter extends ListAdapter<Transaction, TransactionsAd
 
         @Override
         public boolean areContentsTheSame(@NonNull Transaction oldItem, @NonNull Transaction newItem) {
-            return oldItem.getTitle().equals(newItem.getTitle());
+            return oldItem.getTitle().equals(newItem.getTitle())
+                    && oldItem.getAmount() == newItem.getAmount()
+                    && oldItem.getIsIncome() == newItem.getIsIncome()
+                    && oldItem.getDate().equals(newItem.getDate());
         }
     }
 
     public interface OnItemClickCallback {
         void onItemClick(Transaction transaction);
-        void onItemLongClick(Transaction transaction);
     }
 
     @NonNull

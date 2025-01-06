@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,13 +16,9 @@ import app.budgetku.data.database.entity.TransactionWithCategories;
 import app.budgetku.domain.usecase.base.AddWith2ParamsUseCase;
 import app.budgetku.domain.usecase.base.DeleteUseCase;
 import app.budgetku.domain.usecase.base.EditWith2ParamsUseCase;
-import app.budgetku.domain.usecase.base.GetBy1ParamsUseCase;
+import app.budgetku.domain.usecase.base.GetBy1ParamUseCase;
 import app.budgetku.domain.usecase.base.GetBy2ParamsUseCase;
 import app.budgetku.domain.usecase.base.GetBy3ParamsUseCase;
-import app.budgetku.domain.usecase.category.AddCategoryUseCase;
-import app.budgetku.domain.usecase.category.DeleteCategoryUseCase;
-import app.budgetku.domain.usecase.category.EditCategoryUseCase;
-import app.budgetku.domain.usecase.category.GetCategoriesUseCase;
 import app.budgetku.domain.usecase.transaction.AddTransactionUseCase;
 import app.budgetku.domain.usecase.transaction.DeleteTransactionUseCase;
 import app.budgetku.domain.usecase.transaction.EditTransactionUseCase;
@@ -49,26 +44,35 @@ public class TransactionsViewModel extends ViewModel {
     private final MutableLiveData<String> _transactionRelatedMessage =
             new MutableLiveData<>();
     public LiveData<String> transactionRelatedMessage = _transactionRelatedMessage;
-    private final GetBy1ParamsUseCase<Integer,
-            TransactionWithCategories> getTransactionWithCategories;
+    private final GetBy1ParamUseCase<Integer,
+                TransactionWithCategories> getTransactionWithCategories;
     private final GetBy2ParamsUseCase<Integer, String,
             List<Transaction>> getTransactionsByWalletDate;
     private final GetBy3ParamsUseCase<Integer, Integer, String,
             List<Transaction>> getTransactionsByWalletCategoryDate;
-    private AddWith2ParamsUseCase<Transaction, List<Integer>> addTransaction;
-    private EditWith2ParamsUseCase<Transaction, List<Integer>> editTransaction;
-    private DeleteUseCase<Transaction> deleteTransaction;
+    private final AddWith2ParamsUseCase<Transaction, List<Integer>> addTransaction;
+    private final EditWith2ParamsUseCase<Transaction, List<Integer>> editTransaction;
+    private final DeleteUseCase<Transaction> deleteTransaction;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Inject
-    public TransactionsViewModel(GetBy1ParamsUseCase<Integer,
-            TransactionWithCategories> getTransactionWithCategories, GetBy2ParamsUseCase<Integer,
+    public TransactionsViewModel(GetBy1ParamUseCase<Integer,
+                TransactionWithCategories> getTransactionWithCategories, GetBy2ParamsUseCase<Integer,
             String, List<Transaction>> getTransactionsByWalletDate, GetBy3ParamsUseCase<Integer,
-            Integer, String, List<Transaction>> getTransactionsByWalletCategoryDate) {
+            Integer, String, List<Transaction>> getTransactionsByWalletCategoryDate,
+                                 AddWith2ParamsUseCase<Transaction, List<Integer>> addTransaction,
+                                 EditWith2ParamsUseCase<Transaction, List<Integer>> editTransaction,
+                                 DeleteUseCase<Transaction> deleteTransaction) {
         this.getTransactionWithCategories = getTransactionWithCategories;
         this.getTransactionsByWalletDate = getTransactionsByWalletDate;
         this.getTransactionsByWalletCategoryDate = getTransactionsByWalletCategoryDate;
-        getTransactions();
+        this.addTransaction = addTransaction;
+        this.editTransaction = editTransaction;
+        this.deleteTransaction = deleteTransaction;
+    }
+
+    public int getSelectedWalletId() {
+        return this.selectedWalletId;
     }
 
     public void setSelectedWalletId(int selectedWalletId) {
@@ -104,13 +108,7 @@ public class TransactionsViewModel extends ViewModel {
     }
 
     public void getTransactions() {
-        _transactions.setValue(List.of(
-                new Transaction(0, 0, "Apple Music", 59000, false, "2024-02-11"),
-                new Transaction(0, 0, "Google Play", 19000, false, "2024-02-11"),
-                new Transaction(0, 0, "YouTube", 49000, false, "2024-02-11"),
-                new Transaction(0, 0, "Salary", 50000, true, "2024-02-11")
-        ));
-        /*executorService.execute(() -> {
+        executorService.execute(() -> {
             GetTransactionsByWalletDateUseCase getByWalletDate =
                     (GetTransactionsByWalletDateUseCase) getTransactionsByWalletDate;
             GetTransactionsByWalletCategoryDateUseCase getByWalletCategoryDate =
@@ -118,31 +116,43 @@ public class TransactionsViewModel extends ViewModel {
             if (isFilteredTransactionsEnabled) {
                 if (selectedCategoryId != 0) {
                     if (selectedMonth.getValue() != null && selectedMonth.getValue() != 0) {
+                        String monthForQuery;
+                        if (selectedMonth.getValue() < 10) {
+                            monthForQuery = "0" + selectedMonth.getValue();
+                        } else {
+                            monthForQuery = String.valueOf(selectedMonth.getValue());
+                        }
                         _transactions.postValue(getByWalletCategoryDate.execute(selectedWalletId,
-                                selectedCategoryId, selectedYear + "-" + selectedMonth + "%"));
+                                selectedCategoryId, selectedYear.getValue() + "-" + monthForQuery + "%"));
                     } else {
                         _transactions.postValue(getByWalletCategoryDate.execute(selectedWalletId,
-                                selectedCategoryId, selectedYear + "%"));
+                                selectedCategoryId, selectedYear.getValue() + "%"));
                     }
                 } else if (selectedMonth.getValue() != null && selectedMonth.getValue() != 0) {
+                    String monthForQuery;
+                    if (selectedMonth.getValue() < 10) {
+                        monthForQuery = "0" + selectedMonth.getValue();
+                    } else {
+                        monthForQuery = String.valueOf(selectedMonth.getValue());
+                    }
                     _transactions.postValue(getByWalletDate.execute(selectedWalletId,
-                            selectedYear + "-" + selectedMonth + "%"));
+                            selectedYear.getValue() + "-" + monthForQuery + "%"));
                 } else {
                     _transactions.postValue(getByWalletDate.execute(selectedWalletId,
-                            selectedYear + "%"));
+                            selectedYear.getValue() + "%"));
                 }
             } else {
                 _transactions.postValue(getByWalletDate.execute(selectedWalletId,
-                        selectedYear + "%"));
+                        selectedYear.getValue() + "%"));
             }
-        });*/
+        });
     }
 
     public void addTransaction(Transaction transaction, List<Integer> selectedCategoryIds) {
-        executorService.execute(()->{
+        executorService.execute(() -> {
             AddTransactionUseCase add = (AddTransactionUseCase) addTransaction;
             try {
-                add.execute(transaction,selectedCategoryIds);
+                add.execute(transaction, selectedCategoryIds);
             } catch (Exception e) {
                 _transactionRelatedMessage.postValue(e.getMessage());
             } finally {
@@ -152,10 +162,10 @@ public class TransactionsViewModel extends ViewModel {
     }
 
     public void editTransaction(Transaction transaction, List<Integer> selectedCategoryIds) {
-        executorService.execute(()->{
+        executorService.execute(() -> {
             EditTransactionUseCase edit = (EditTransactionUseCase) editTransaction;
             try {
-                edit.execute(transaction,selectedCategoryIds);
+                edit.execute(transaction, selectedCategoryIds);
             } catch (Exception e) {
                 _transactionRelatedMessage.postValue(e.getMessage());
             } finally {
@@ -165,7 +175,7 @@ public class TransactionsViewModel extends ViewModel {
     }
 
     public void deleteTransaction(Transaction transaction) {
-        executorService.execute(()->{
+        executorService.execute(() -> {
             DeleteTransactionUseCase delete = (DeleteTransactionUseCase) deleteTransaction;
             delete.execute(transaction);
             getTransactions();

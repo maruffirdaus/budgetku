@@ -1,5 +1,6 @@
 package app.budgetku.ui.shared.adapter;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -113,7 +114,7 @@ public class CategoriesAdapter extends ListAdapter<Category, CategoriesAdapter.C
                 changedItemIndex.add(i);
             }
         }
-        this.selectedCategoryIds = selectedCategoryIds;
+        this.selectedCategoryIds = new ArrayList<>(selectedCategoryIds);
         changedItemIndex.forEach(this::notifyItemChanged);
     }
 }

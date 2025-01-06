@@ -26,6 +26,9 @@ public interface TransactionDao {
             "WHERE t.walletId = :walletId AND c.categoryId = :categoryId AND t.date LIKE :date")
     List<Transaction> getTransactions(int walletId, int categoryId, String date);
 
+    @Query("SELECT * FROM `transaction` WHERE id = :id")
+    Transaction getTransaction(int id);
+
     @androidx.room.Transaction
     @Query("SELECT * FROM `transaction` WHERE id = :id")
     TransactionWithCategories getTransactionWithCategories(int id);

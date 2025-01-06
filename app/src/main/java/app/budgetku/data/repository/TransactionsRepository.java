@@ -26,6 +26,10 @@ public class TransactionsRepository {
         return transactionDao.getTransactions(walletId, categoryId, date);
     }
 
+    public Transaction getTransaction(int id) {
+        return transactionDao.getTransaction(id);
+    }
+
     public TransactionWithCategories getTransactionWithCategories(int id) {
         return transactionDao.getTransactionWithCategories(id);
     }
@@ -43,7 +47,7 @@ public class TransactionsRepository {
         oldRefs.forEach(transactionCategoryCrossRefDao::delete);
         transactionDao.update(transaction);
         categoryIds.forEach(categoryId -> transactionCategoryCrossRefDao
-                .insert(new TransactionCategoryCrossRef((int) transaction.getId(), categoryId))
+                .insert(new TransactionCategoryCrossRef(transaction.getId(), categoryId))
         );
     }
 

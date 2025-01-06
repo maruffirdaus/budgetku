@@ -13,7 +13,7 @@ import app.budgetku.data.database.entity.TransactionCategoryCrossRef;
 import app.budgetku.data.database.entity.Wallet;
 
 @Database(entities = {Wallet.class, Category.class, Transaction.class,
-        TransactionCategoryCrossRef.class}, version = 1)
+        TransactionCategoryCrossRef.class}, version = 1, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract WalletDao walletDao();

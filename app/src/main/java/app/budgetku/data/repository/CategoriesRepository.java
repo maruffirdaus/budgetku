@@ -1,9 +1,6 @@
 package app.budgetku.data.repository;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import app.budgetku.data.database.dao.CategoryDao;
 import app.budgetku.data.database.entity.Category;

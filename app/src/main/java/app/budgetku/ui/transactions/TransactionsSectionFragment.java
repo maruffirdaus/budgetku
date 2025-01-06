@@ -13,21 +13,22 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import app.budgetku.R;
 import app.budgetku.data.database.entity.Category;
 import app.budgetku.data.database.entity.Transaction;
-import app.budgetku.data.database.entity.Wallet;
 import app.budgetku.databinding.FragmentTransactionsSectionBinding;
 import app.budgetku.ui.shared.adapter.CategoriesAdapter;
 import app.budgetku.ui.shared.viewmodel.CategoriesViewModel;
 import app.budgetku.ui.shared.viewmodel.TransactionsViewModel;
 import app.budgetku.ui.shared.viewmodel.WalletsViewModel;
 import app.budgetku.ui.shared.widget.AddEditCategoryDialog;
+import app.budgetku.ui.shared.widget.AddEditTransactionBottomSheet;
 import app.budgetku.ui.shared.widget.DeleteCategoryDialog;
-import app.budgetku.ui.shared.widget.DeleteTransactionDialog;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
@@ -144,6 +145,7 @@ public class TransactionsSectionFragment extends Fragment {
                 selectedWallet -> adapter.setCurrency(selectedWallet.getCurrency()));
         transactionsViewModel.transactions.observe(getViewLifecycleOwner(), transactions -> {
             if (transactions.isEmpty()) {
+                adapter.submitList(Collections.emptyList());
                 transactionsViewModel.setTransactionRelatedMessage(getString(R.string.no_transactions_data));
             } else {
                 adapter.submitList(transactions);
@@ -153,16 +155,31 @@ public class TransactionsSectionFragment extends Fragment {
 
     @NonNull
     private TransactionsAdapter getTransactionsAdapter() {
-        return new TransactionsAdapter("Default", new TransactionsAdapter.OnItemClickCallback() {
-            @Override
-            public void onItemClick(Transaction transaction) {
-
-            }
-
-            @Override
-            public void onItemLongClick(Transaction transaction) {
-                new DeleteTransactionDialog(requireActivity(),
-                        () -> transactionsViewModel.deleteTransaction(transaction)).show();
+        return new TransactionsAdapter("Default", transaction -> {
+            if (walletsViewModel.selectedWallet.getValue() != null) {
+                transactionsViewModel.getTransactionWithCategories(transaction.getId());
+                Consumer<Category> showDeleteCategoryDialog = (category) -> new DeleteCategoryDialog(requireActivity(),
+                        () -> categoriesViewModel.deleteCategory(category)).show();
+                Consumer<Category> showEditCategoryDialog = (category) -> new AddEditCategoryDialog(requireActivity(),
+                        category, categoriesViewModel::editCategory,
+                        showDeleteCategoryDialog).show();
+                Runnable showAddCategoryDialog = () -> new AddEditCategoryDialog(requireActivity(),
+                        categoriesViewModel::addCategory).show();
+                Consumer<Transaction> showDeleteTransactionDialog = transactionToDelete -> new DeleteCategoryDialog(requireActivity(),
+                        () -> transactionsViewModel.deleteTransaction(transactionToDelete)).show();
+                AtomicBoolean isBottomSheetShown = new AtomicBoolean(false);
+                transactionsViewModel.transactionWithCategories.observe(getViewLifecycleOwner(), data -> {
+                    if (!isBottomSheetShown.get()) {
+                        List<Integer> selectedCategoryIds = new ArrayList<>();
+                        data.getCategories().forEach(category -> selectedCategoryIds.add(category.getId()));
+                        new AddEditTransactionBottomSheet(walletsViewModel.selectedWallet.getValue(),
+                                data.getTransaction(), selectedCategoryIds,
+                                categoriesViewModel.categories, showEditCategoryDialog,
+                                showAddCategoryDialog, transactionsViewModel::editTransaction,
+                                showDeleteTransactionDialog).show(getParentFragmentManager(), null);
+                        isBottomSheetShown.set(true);
+                    }
+                });
             }
         });
     }

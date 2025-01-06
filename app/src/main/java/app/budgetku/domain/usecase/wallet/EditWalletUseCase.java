@@ -18,7 +18,7 @@ public class EditWalletUseCase extends EditUseCase<Wallet> {
         } else if (data.getCurrency().isBlank()) {
             throw new Exception("Wallet currency cannot be blank");
         } else {
-            repository.addWallet(data);
+            repository.editWallet(data);
         }
     }
 }

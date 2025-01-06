@@ -1,6 +1,5 @@
 package app.budgetku.ui.main;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 
@@ -13,8 +12,10 @@ import androidx.lifecycle.ViewModelProvider;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import app.budgetku.R;
+import app.budgetku.data.database.entity.Category;
 import app.budgetku.data.database.entity.Wallet;
 import app.budgetku.databinding.ActivityMainBinding;
 import app.budgetku.ui.dashboard.DashboardFragment;
@@ -47,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements FragmentListener 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setupViewModel();
-        initSharedPrefs();
         setupNavigationDrawer();
         if (savedInstanceState != null) {
             selectedNavItem = savedInstanceState.getInt(ARG_SELECTED_NAV_ITEM);
@@ -67,22 +67,13 @@ public class MainActivity extends AppCompatActivity implements FragmentListener 
     @Override
     public void onToolbarNavigationClick() {
         binding.drawerLayout.open();
+        walletsViewModel.getWallets();
     }
 
     private void setupViewModel() {
         walletsViewModel = new ViewModelProvider(this).get(WalletsViewModel.class);
         categoriesViewModel = new ViewModelProvider(this).get(CategoriesViewModel.class);
         transactionsViewModel = new ViewModelProvider(this).get(TransactionsViewModel.class);
-    }
-
-    private void initSharedPrefs() {
-        SharedPreferences sharedPrefs = getSharedPreferences("budgetku_prefs", MODE_PRIVATE);
-        boolean isSetupScreenLaunched = sharedPrefs.getBoolean("is_setup_screen_launched", false);
-        if (!isSetupScreenLaunched) {
-            //finish();
-        } else {
-            int selectedWalletId = sharedPrefs.getInt("selected_wallet_id", 0);
-        }
     }
 
     private void setupNavigationDrawer() {
@@ -107,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements FragmentListener 
         walletsViewModel.selectedWallet.observe(this, selectedWallet -> {
             transactionsViewModel.setSelectedWalletId(selectedWallet.getId());
             binding.navigationDrawer.setCheckedItem(1000 + selectedWallet.getId());
+            transactionsViewModel.getTransactions();
         });
         binding.navigationDrawer.setNavigationItemSelectedListener(item -> {
             if (item.getItemId() == R.id.menu_add_wallet) {
@@ -139,14 +131,19 @@ public class MainActivity extends AppCompatActivity implements FragmentListener 
                 return true;
             } else if (item.getItemId() == R.id.menu_add_item) {
                 if (walletsViewModel.selectedWallet.getValue() != null) {
+                    Consumer<Category> showDeleteCategoryDialog = (category) -> new DeleteCategoryDialog(this,
+                            () -> categoriesViewModel.deleteCategory(category)).show();
+                    Consumer<Category> showEditCategoryDialog = (category) -> new AddEditCategoryDialog(this,
+                            category, categoriesViewModel::editCategory,
+                            showDeleteCategoryDialog).show();
+                    Runnable showAddCategoryDialog = () -> new AddEditCategoryDialog(this,
+                            categoriesViewModel::addCategory).show();
                     new AddEditTransactionBottomSheet(walletsViewModel.selectedWallet.getValue(),
-                            categoriesViewModel.categories,
-                            category -> new AddEditCategoryDialog(this, category,
-                                    categoriesViewModel::editCategory,
-                                    categoryToDelete -> new DeleteCategoryDialog(this,
-                                            () -> categoriesViewModel.deleteCategory(categoryToDelete)).show()).show(), () -> new AddEditCategoryDialog(this, categoriesViewModel::addCategory).show(),
+                            categoriesViewModel.categories, showEditCategoryDialog, showAddCategoryDialog,
                             transactionsViewModel::addTransaction).show(getSupportFragmentManager(),
                             null);
+                } else {
+                    walletsViewModel.setWalletRelatedMessage("No wallet selected, please select one from sidebar");
                 }
                 return false;
             } else if (item.getItemId() == R.id.menu_transactions) {
