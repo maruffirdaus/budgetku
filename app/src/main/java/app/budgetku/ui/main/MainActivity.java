@@ -74,6 +74,12 @@ public class MainActivity extends AppCompatActivity implements FragmentListener 
         walletsViewModel = new ViewModelProvider(this).get(WalletsViewModel.class);
         categoriesViewModel = new ViewModelProvider(this).get(CategoriesViewModel.class);
         transactionsViewModel = new ViewModelProvider(this).get(TransactionsViewModel.class);
+
+        transactionsViewModel.walletUpdateRequired.observe(this, walletId -> {
+            if (walletId != null) {
+                walletsViewModel.getWallet(walletId);
+            }
+        });
     }
 
     private void setupNavigationDrawer() {

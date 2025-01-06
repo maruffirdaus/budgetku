@@ -153,6 +153,7 @@ public class TransactionsViewModel extends ViewModel {
             AddTransactionUseCase add = (AddTransactionUseCase) addTransaction;
             try {
                 add.execute(transaction, selectedCategoryIds);
+                _walletUpdateRequired.postValue(transaction.getWalletId());
             } catch (Exception e) {
                 _transactionRelatedMessage.postValue(e.getMessage());
             } finally {
@@ -166,6 +167,7 @@ public class TransactionsViewModel extends ViewModel {
             EditTransactionUseCase edit = (EditTransactionUseCase) editTransaction;
             try {
                 edit.execute(transaction, selectedCategoryIds);
+                _walletUpdateRequired.postValue(transaction.getWalletId());
             } catch (Exception e) {
                 _transactionRelatedMessage.postValue(e.getMessage());
             } finally {
@@ -179,6 +181,7 @@ public class TransactionsViewModel extends ViewModel {
             DeleteTransactionUseCase delete = (DeleteTransactionUseCase) deleteTransaction;
             delete.execute(transaction);
             getTransactions();
+            _walletUpdateRequired.postValue(transaction.getWalletId());
         });
     }
 
