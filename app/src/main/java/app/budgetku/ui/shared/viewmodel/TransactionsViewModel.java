@@ -132,6 +132,7 @@ public class TransactionsViewModel extends ViewModel {
     }
 
     public void addTransaction(Transaction transaction, List<Integer> selectedCategoryIds) {
+
     }
 
     public void editTransaction(Transaction transaction, List<Integer> selectedCategoryIds) {

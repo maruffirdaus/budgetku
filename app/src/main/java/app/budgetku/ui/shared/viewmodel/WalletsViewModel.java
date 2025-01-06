@@ -47,6 +47,7 @@ public class WalletsViewModel extends ViewModel {
     }
 
     public void getWallets() {
+
     }
 
     public void addWallet(Wallet wallet) {

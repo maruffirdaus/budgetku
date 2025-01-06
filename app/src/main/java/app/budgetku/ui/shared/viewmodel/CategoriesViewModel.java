@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -13,6 +15,10 @@ import app.budgetku.domain.usecase.base.AddUseCase;
 import app.budgetku.domain.usecase.base.DeleteUseCase;
 import app.budgetku.domain.usecase.base.EditUseCase;
 import app.budgetku.domain.usecase.base.GetUseCase;
+import app.budgetku.domain.usecase.category.AddCategoryUseCase;
+import app.budgetku.domain.usecase.category.DeleteCategoryUseCase;
+import app.budgetku.domain.usecase.category.EditCategoryUseCase;
+import app.budgetku.domain.usecase.category.GetCategoriesUseCase;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
 @HiltViewModel
@@ -28,6 +34,8 @@ public class CategoriesViewModel extends ViewModel {
     private final AddUseCase<Category> addCategory;
     private final EditUseCase<Category> editCategory;
     private final DeleteUseCase<Category> deleteCategory;
+
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Inject
     public CategoriesViewModel(GetUseCase<List<Category>> getCategories,
@@ -48,15 +56,49 @@ public class CategoriesViewModel extends ViewModel {
     }
 
     public void getCategories() {
-
+        executorService.execute(()->{
+            GetCategoriesUseCase get = (GetCategoriesUseCase) getCategories;
+            _categories.postValue(get.execute());
+        });
     }
 
     public void addCategory(Category category) {
+        executorService.execute(()->{
+            AddCategoryUseCase add = (AddCategoryUseCase) addCategory;
+            try {
+                add.execute(category);
+            } catch (Exception e) {
+                _categoryRelatedMessage.postValue(e.getMessage());
+            } finally {
+                getCategories();
+            }
+        });
     }
 
     public void editCategory(Category category) {
+        executorService.execute(()->{
+            EditCategoryUseCase edit = (EditCategoryUseCase) editCategory;
+            try {
+                edit.execute(category);
+            } catch (Exception e) {
+                _categoryRelatedMessage.postValue(e.getMessage());
+            } finally {
+                getCategories();
+            }
+        });
     }
 
     public void deleteCategory(Category category) {
+        executorService.execute(()->{
+            DeleteCategoryUseCase delete = (DeleteCategoryUseCase) deleteCategory;
+            delete.execute(category);
+            getCategories();
+        });
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        executorService.shutdown();
     }
 }
