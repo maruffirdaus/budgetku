@@ -73,10 +73,6 @@ public class TransactionsViewModel extends ViewModel {
         this.deleteTransaction = deleteTransaction;
     }
 
-    public int getSelectedWalletId() {
-        return this.selectedWalletId;
-    }
-
     public void setSelectedWalletId(int selectedWalletId) {
         this.selectedWalletId = selectedWalletId;
     }

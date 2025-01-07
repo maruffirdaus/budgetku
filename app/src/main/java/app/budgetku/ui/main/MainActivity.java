@@ -102,9 +102,13 @@ public class MainActivity extends AppCompatActivity implements FragmentListener 
                     .setIcon(R.drawable.ic_add);
         });
         walletsViewModel.selectedWallet.observe(this, selectedWallet -> {
-            transactionsViewModel.setSelectedWalletId(selectedWallet.getId());
-            binding.navigationDrawer.setCheckedItem(1000 + selectedWallet.getId());
-            transactionsViewModel.getTransactions();
+            if (selectedWallet != null) {
+                transactionsViewModel.setSelectedWalletId(selectedWallet.getId());
+                binding.navigationDrawer.setCheckedItem(1000 + selectedWallet.getId());
+                transactionsViewModel.getTransactions();
+            } else {
+                transactionsViewModel.setSelectedWalletId(0);
+            }
         });
         binding.navigationDrawer.setNavigationItemSelectedListener(item -> {
             if (item.getItemId() == R.id.menu_add_wallet) {

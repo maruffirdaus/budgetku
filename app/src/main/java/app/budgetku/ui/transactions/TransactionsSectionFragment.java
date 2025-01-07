@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import app.budgetku.R;
@@ -167,19 +166,11 @@ public class TransactionsSectionFragment extends Fragment {
                         categoriesViewModel::addCategory).show();
                 Consumer<Transaction> showDeleteTransactionDialog = transactionToDelete -> new DeleteCategoryDialog(requireActivity(),
                         () -> transactionsViewModel.deleteTransaction(transactionToDelete)).show();
-                AtomicBoolean isBottomSheetShown = new AtomicBoolean(false);
-                transactionsViewModel.transactionWithCategories.observe(getViewLifecycleOwner(), data -> {
-                    if (!isBottomSheetShown.get()) {
-                        List<Integer> selectedCategoryIds = new ArrayList<>();
-                        data.getCategories().forEach(category -> selectedCategoryIds.add(category.getId()));
-                        new AddEditTransactionBottomSheet(walletsViewModel.selectedWallet.getValue(),
-                                data.getTransaction(), selectedCategoryIds,
-                                categoriesViewModel.categories, showEditCategoryDialog,
-                                showAddCategoryDialog, transactionsViewModel::editTransaction,
-                                showDeleteTransactionDialog).show(getParentFragmentManager(), null);
-                        isBottomSheetShown.set(true);
-                    }
-                });
+                new AddEditTransactionBottomSheet(walletsViewModel.selectedWallet.getValue(),
+                        transactionsViewModel.transactionWithCategories,
+                        categoriesViewModel.categories, showEditCategoryDialog,
+                        showAddCategoryDialog, transactionsViewModel::editTransaction,
+                        showDeleteTransactionDialog).show(getParentFragmentManager(), null);
             }
         });
     }

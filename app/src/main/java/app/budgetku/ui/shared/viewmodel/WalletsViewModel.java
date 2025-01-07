@@ -53,10 +53,14 @@ public class WalletsViewModel extends ViewModel {
     }
 
     public void setSelectedWallet(int selectedWallet) {
-        executorService.execute(() -> {
-            GetWalletByIdUseCase get = (GetWalletByIdUseCase) getWalletById;
-            _selectedWallet.postValue(get.execute(selectedWallet));
-        });
+        if (selectedWallet != 0) {
+            executorService.execute(() -> {
+                GetWalletByIdUseCase get = (GetWalletByIdUseCase) getWalletById;
+                _selectedWallet.postValue(get.execute(selectedWallet));
+            });
+        } else {
+            _selectedWallet.setValue(null);
+        }
     }
 
     public void setWalletRelatedMessage(String walletRelatedMessage) {

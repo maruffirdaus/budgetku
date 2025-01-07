@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 import app.budgetku.R;
 import app.budgetku.data.database.entity.Category;
 import app.budgetku.data.database.entity.Transaction;
+import app.budgetku.data.database.entity.TransactionWithCategories;
 import app.budgetku.data.database.entity.Wallet;
 import app.budgetku.databinding.BottomSheetAddEditTransactionBinding;
 import app.budgetku.ui.shared.adapter.CategoriesAdapter;
@@ -33,9 +34,11 @@ import app.budgetku.ui.shared.adapter.CategoriesAdapter;
 public class AddEditTransactionBottomSheet extends BottomSheetDialogFragment {
     private BottomSheetAddEditTransactionBinding binding;
     private final Wallet wallet;
-    private final Transaction transaction;
+    private Transaction transaction;
+    private LiveData<TransactionWithCategories> transactionWithCategories;
+    private final CategoriesAdapter adapter = getCategoriesAdapter();
     private final LiveData<List<Category>> categories;
-    private List<Integer> selectedCategoryIds = new ArrayList<>();
+    private final List<Integer> selectedCategoryIds = new ArrayList<>();
     private final Consumer<Category> onCategoryItemLongClick;
     private final Runnable onAddCategoryItemClick;
     private final BiConsumer<Transaction, List<Integer>> onSaveButtonClick;
@@ -53,16 +56,14 @@ public class AddEditTransactionBottomSheet extends BottomSheetDialogFragment {
         this.onSaveButtonClick = onSaveButtonClick;
     }
 
-    public AddEditTransactionBottomSheet(Wallet wallet, Transaction transaction,
-                                         List<Integer> selectedCategoryIds,
+    public AddEditTransactionBottomSheet(Wallet wallet, LiveData<TransactionWithCategories> transactionWithCategories,
                                          LiveData<List<Category>> categories,
                                          Consumer<Category> onCategoryItemLongClick,
                                          Runnable onAddCategoryItemClick,
                                          BiConsumer<Transaction, List<Integer>> onSaveButtonClick,
                                          Consumer<Transaction> onDeleteButtonClick) {
         this.wallet = wallet;
-        this.transaction = transaction;
-        this.selectedCategoryIds = selectedCategoryIds;
+        this.transactionWithCategories = transactionWithCategories;
         this.categories = categories;
         this.onCategoryItemLongClick = onCategoryItemLongClick;
         this.onAddCategoryItemClick = onAddCategoryItemClick;
@@ -81,16 +82,23 @@ public class AddEditTransactionBottomSheet extends BottomSheetDialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (onDeleteButtonClick != null) {
-            setupEditBottomSheetView();
+            transactionWithCategories.observe(getViewLifecycleOwner(), transactionWithCategories -> {
+                this.transaction = transactionWithCategories.getTransaction();
+                transactionWithCategories.getCategories().forEach(category -> this.selectedCategoryIds.add(category.getId()));
+                adapter.setSelectedCategoryIds(this.selectedCategoryIds);
+                setupEditBottomSheetView();
+                setupDeleteButton();
+                setupSaveButton();
+            });
         } else {
             setupAddBottomSheetView();
+            setupDeleteButton();
+            setupSaveButton();
         }
         setupTransactionAmountTextField();
         setupDatePicker();
         setupCategoriesRV();
         setupAddCategoryCard();
-        setupDeleteButton();
-        setupSaveButton();
     }
 
     private void setupAddBottomSheetView() {
@@ -146,7 +154,6 @@ public class AddEditTransactionBottomSheet extends BottomSheetDialogFragment {
     private void setupCategoriesRV() {
         binding.rvCategories.setLayoutManager(new LinearLayoutManager(requireActivity(),
                 LinearLayoutManager.HORIZONTAL, false));
-        CategoriesAdapter adapter = getCategoriesAdapter();
         binding.rvCategories.setAdapter(adapter);
         categories.observe(getViewLifecycleOwner(), adapter::submitList);
         adapter.setSelectedCategoryIds(selectedCategoryIds);

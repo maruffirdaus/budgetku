@@ -20,8 +20,8 @@
             app:menu="@menu/transactions_top_app_bar_menu"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="?attr/colorOnSurface"
-            app:subtitle="@string/balance_empty"
-            app:title="@string/wallet" />
+            app:subtitle="@string/empty_balance"
+            app:title="@string/no_wallet_selected" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"

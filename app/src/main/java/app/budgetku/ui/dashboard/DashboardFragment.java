@@ -15,6 +15,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.text.NumberFormat;
 
+import app.budgetku.R;
 import app.budgetku.databinding.FragmentDashboardBinding;
 import app.budgetku.ui.shared.listener.FragmentListener;
 import app.budgetku.ui.shared.viewmodel.CategoriesViewModel;
@@ -74,11 +75,16 @@ public class DashboardFragment extends Fragment {
 
     private void setupWalletCard() {
         walletsViewModel.selectedWallet.observe(getViewLifecycleOwner(), selectedWallet -> {
-            binding.tvWalletName.setText(selectedWallet.getName());
-            NumberFormat numberFormat = NumberFormat.getNumberInstance();
-            String formattedBalance = numberFormat.format(selectedWallet.getBalance());
-            binding.tvWalletBalance
-                    .setText(new StringBuilder().append(selectedWallet.getCurrency()).append(formattedBalance));
+            if (selectedWallet != null) {
+                binding.tvWalletName.setText(selectedWallet.getName());
+                NumberFormat numberFormat = NumberFormat.getNumberInstance();
+                String formattedBalance = numberFormat.format(selectedWallet.getBalance());
+                binding.tvWalletBalance
+                        .setText(new StringBuilder().append(selectedWallet.getCurrency()).append(formattedBalance));
+            } else {
+                binding.tvWalletName.setText(R.string.no_wallet_selected);
+                binding.tvWalletBalance.setText(R.string.empty_balance);
+            }
         });
         binding.cardWallet.setOnClickListener(v -> {
             if (walletsViewModel.selectedWallet.getValue() != null) {

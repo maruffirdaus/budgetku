@@ -60,7 +60,7 @@
                         android:ellipsize="end"
                         android:gravity="center_vertical"
                         android:maxLines="1"
-                        android:text="@string/wallet"
+                        android:text="@string/no_wallet_selected"
                         android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
                         android:textColor="?attr/colorOnPrimaryFixedVariant"
                         app:drawableStartCompat="@drawable/ic_account_balance_wallet"
@@ -75,7 +75,7 @@
                         android:layout_marginBottom="16dp"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="@string/balance_empty"
+                        android:text="@string/empty_balance"
                         android:textAppearance="@style/TextAppearance.Material3.DisplaySmall"
                         android:textColor="?attr/colorOnPrimaryFixed" />
 
