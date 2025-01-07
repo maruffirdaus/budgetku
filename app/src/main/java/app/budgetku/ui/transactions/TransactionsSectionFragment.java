@@ -28,6 +28,7 @@ import app.budgetku.ui.shared.viewmodel.WalletsViewModel;
 import app.budgetku.ui.shared.widget.AddEditCategoryDialog;
 import app.budgetku.ui.shared.widget.AddEditTransactionBottomSheet;
 import app.budgetku.ui.shared.widget.DeleteCategoryDialog;
+import app.budgetku.ui.shared.widget.DeleteTransactionDialog;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
@@ -164,7 +165,7 @@ public class TransactionsSectionFragment extends Fragment {
                         showDeleteCategoryDialog).show();
                 Runnable showAddCategoryDialog = () -> new AddEditCategoryDialog(requireActivity(),
                         categoriesViewModel::addCategory).show();
-                Consumer<Transaction> showDeleteTransactionDialog = transactionToDelete -> new DeleteCategoryDialog(requireActivity(),
+                Consumer<Transaction> showDeleteTransactionDialog = transactionToDelete -> new DeleteTransactionDialog(requireActivity(),
                         () -> transactionsViewModel.deleteTransaction(transactionToDelete)).show();
                 new AddEditTransactionBottomSheet(walletsViewModel.selectedWallet.getValue(),
                         transactionsViewModel.transactionWithCategories,
