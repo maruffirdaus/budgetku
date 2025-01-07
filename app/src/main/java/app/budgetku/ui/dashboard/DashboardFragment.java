@@ -92,7 +92,12 @@ public class DashboardFragment extends Fragment {
                         walletsViewModel.selectedWallet.getValue(),
                         editedWallet -> walletsViewModel.editWallet(editedWallet),
                         walletToDelete -> new DeleteWalletDialog(requireActivity(),
-                                () -> walletsViewModel.deleteWallet(walletToDelete)).show()).show();
+                                () -> {
+                                    walletsViewModel.deleteWallet(walletToDelete);
+                                    if (walletsViewModel.wallets.getValue() != null && 1 < walletsViewModel.wallets.getValue().size()) {
+                                        walletsViewModel.setSelectedWallet(0);
+                                    }
+                                }).show()).show();
             }
         });
     }
