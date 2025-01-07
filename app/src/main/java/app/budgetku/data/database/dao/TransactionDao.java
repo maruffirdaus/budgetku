@@ -17,13 +17,14 @@ public interface TransactionDao {
     @Insert
     long insert(Transaction transaction);
 
-    @Query("SELECT * FROM `transaction` WHERE walletId = :walletId AND date LIKE :date")
+    @Query("SELECT * FROM `transaction` WHERE walletId = :walletId AND date LIKE :date ORDER BY date DESC")
     List<Transaction> getTransactions(int walletId, String date);
 
     @androidx.room.Transaction
     @Query("SELECT * FROM `transaction` t " +
             "JOIN transactioncategorycrossref c ON t.id = c.transactionId " +
-            "WHERE t.walletId = :walletId AND c.categoryId = :categoryId AND t.date LIKE :date")
+            "WHERE t.walletId = :walletId AND c.categoryId = :categoryId AND t.date LIKE :date " +
+            "ORDER BY date DESC")
     List<Transaction> getTransactions(int walletId, int categoryId, String date);
 
     @Query("SELECT * FROM `transaction` WHERE id = :id")
